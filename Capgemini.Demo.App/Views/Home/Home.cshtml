@@ -1,0 +1,303 @@
+﻿@{
+    ViewBag.Title = "Home";
+}
+<style>
+    .list-group-item { word-wrap: break-word; }
+
+</style>
+    @*<div class="jumbotron" style="color:white; background-color:#72BAD0; padding-top:8px; padding-bottom:8px">
+        <img class="img-fluid pull-left" style="max-height:50px;" src="/images/adm.png"> <h2>CloudTrade</h2>
+    </div>*@
+<div style="padding-top: 1em;"></div>
+    <div class="row ">
+        <div class="col-lg-8">
+            <div class="container-fluid">
+                <div class="card" >
+                    <div class="card-header">Live Quotes</div>
+                    <div style="padding-top: 1em;" id="stocktable"></div>
+
+                </div>
+            </div>
+        </div>
+        <div class="col-lg-4">
+            <div class="card">
+                <div class="card-header">
+                    Latest Stories
+                </div>
+                <div class="card-img-top">
+                        <video id="bvideo" class="img-fluid" controls autoplay>
+                            <source id="videosrc" src="" type="video/mp4">
+                            Your browser does not support HTML5 video.
+                        </video>
+                    </div>
+                <div class="card-block" id="divBlob">
+                </div>
+            </div>
+        </div>
+     </div>
+
+    <div class="row">
+        <div class="col-lg-12">
+            <div class="card">
+                <div class="card-header">
+                    Trade Zone
+                </div>
+                <div class="card-block">
+                    <div class="row">
+                        <div class="col-lg-5 col-xs-12">
+                            <div class="card">
+                                <div class="card-header">
+                                    Place Order
+                                </div>
+                                <div class="card-block">
+                                    <div class="col-xs-6 col-sm-3">
+                                        <div class="card card-dark bg-success" id="color">
+                                            @*<div class="card card-dark bg-success" id="colorHeader">*@
+                                                <div class="row">
+                                                    <div class="col-xs-12 text-center">
+                                                        <div id="stockname"><h5>Stock Name</h5></div>
+                                                    </div>
+                                                </div>
+                                            @*</div>*@
+                                                <div class="card-text">
+                                                    <div class="row">
+                                                        <div class="col-xs-3 col-sm-3 col-lg-3">
+                                                            <i id="arrow" class="fa fa-caret-up fa-2x"></i>
+                                                        </div>
+                                                        <div class="col-xs-8 col-sm-8 col-lg-8 text-right">
+                                                            <div id="divPrice">00.00</div>
+                                                        </div>
+                                                    </div>
+                                                </div>
+
+                                        </div>
+                                    </div>
+                                    <div class="col-xs-12 col-sm-9">
+                                        <div class="form-group">
+                                            <div class="md-form col-xs-3">
+                                                <label for="txtPrice">Bid Price</label>
+                                                <input type="text" onkeypress="return isNumberandDecimal(event)" id="txtPrice" class="form-control">
+                                            </div>
+                                                <div class="md-form col-xs-3">
+                                                    <input type="text" onkeypress="return isNumberandDecimal(event)" id="txtQuantity" class="form-control">
+                                                    <label for="txtQuantity">Quantity</label>
+                                                </div>
+                                            <div class="col-xs-6">
+                                                <span class="pull-right">
+                                                    <button class="btn btn-warning">Cancel</button>
+                                                    <button class="btn btn-primary" id="btnSubmit">Submit</button>
+                                                </span>
+                                            </div>    
+                                        </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        <div class="col-lg-7 col-xs-12">
+                            <div class="card">
+                                <div class="card-header">
+                                    My Trades Queue
+                                </div>
+                                <div class="card-text">
+                                    <div>
+                                        <div class="row small">
+                                            <div class="col-lg-4">
+                                                Stock Qeueue
+                                            </div>
+                                            <div class="col-lg-2 pull-right">
+                                            </div>
+                                            <div class="col-lg-4 pull-right">
+                                                Order Time
+                                            </div>
+                                            <div class="col-lg-2 pull-right">
+                                                Price
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div id="divQueue">
+                                        <a href="#" class="list-group-item list-group-item-info">
+                                            <i class="fa fa-line-chart"></i> Trades Queue 1 <span class="col-lg-offset-2">price</span><span class="col-lg-offset-2 pull-right">time</span><span class="col-lg-offset-2 fa fa-clock-o fa-2x pull-right"></span>
+                                        </a>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <input type="hidden" id="hdnstockid" />
+    </div>
+   <script type="text/javascript">
+       var playFlag = false;
+       var stocklist = [];
+       var videolist = [];
+       var videoCurrentPos = 0;
+       $(document).ready(function () {
+           GetTableData = function () {
+               $.getJSON('@Url.Action("GetTableDetails", "Home")', null, function (result) {
+                   var data = result.stockData;
+                   var xmlstring = "";
+                   var animatedclass = "";
+                   for (var irow = 0; irow < data.length; irow++) {
+                       if (playFlag == false) {
+                           $("#stockname").text(data[0].StockName);
+                           $("#divPrice").text(data[0].Price);
+                           $("#hdnstockid").val(data[irow].StockId);
+                           if (data[0].Flag) {
+                               $("#color").attr('class', 'card card-dark bg-success');
+                           }
+                           else {
+                               $("#color").attr('class', 'card card-dark bg-danger');
+                           }
+                       }
+                       xmlstring += " <div class='col-sm-3 col-xs-4 col-lg-2'>";
+                       if(stocklist.length!=data.length)
+                           stocklist.push(data[irow].StockName + "#" + data[irow].Flag.toString());
+                       for (var count = 0; count < stocklist.length; count++)
+                       {
+                           var value = stocklist[count].split('#');
+                           if (value[0] == data[irow].StockName && value[1] != data[irow].Flag.toString())
+                           {
+                               animatedclass = "animated flipInY";
+                               console.log(animatedclass);
+                               stocklist.splice(count, 1);
+                               stocklist.push(data[irow].StockName + "#" + data[irow].Flag.toString());
+                               break;
+                           }
+                           else
+                               animatedclass = "";
+                          
+                       }
+                       if (data[irow].Flag == true)
+                           xmlstring += "<div class='card card-dark bg-success waves-effect waves-light hoverable z-depth-2 "+animatedclass+"' onclick=Display('" + data[irow].StockName + "','" + data[irow].StockId + "','" + data[irow].Price + "'," + data[irow].Flag + ")><div class='card-block'>";
+                       else
+                           xmlstring += "<div class='card card-dark bg-danger waves-effect waves-light hoverable z-depth-2 "+animatedclass+"' onclick=Display('" + data[irow].StockName + "','" + data[irow].StockId + "','" + data[irow].Price + "'," + data[irow].Flag + ")><div class='card-block'>";
+                       xmlstring += "<h5 class='h5-responsive card-title text-xs-center'>" + data[irow].StockName + "</h5><div class='row'><div class='card-text'><div class='row'> <div class='col-xs-3'><h5 class='h5-responsive'>" + data[irow].Price + "</h5></div><div class='col-xs-9'><span class='pull-xs-right'>";
+                       if (data[irow].Flag == true)
+                           xmlstring += "<i class='fa fa-caret-up fa-2x'></i>";
+                       else
+                           xmlstring += "<i class='fa fa-caret-down fa-2x'></i>";
+                       xmlstring += " (" + data[irow].Percentage + " %)</span></div></div></div></div></div></div></div>"
+                   }
+                   $("#stocktable").html(xmlstring);
+               });
+           }
+           GetQueueData = function () {
+               $.getJSON('@Url.Action("GetQueueDetails", "Home")', null, function (result) {
+                   var queuelst = result.queueData;
+                   xmlstring = "";
+                   for (var irow = 0; irow < queuelst.length; irow++) {
+                       xmlstring += "<a href='#' class='list-group-item list-group-item-info'><div class='row'><div class='col-lg-2'>" + queuelst[irow].StockName + "</div><div class='col-lg-2 pull-right'>";
+                       if (queuelst[irow].StockStatus == true)
+                           xmlstring += "<span class='fa fa-check pull-right'></span>";
+                       else
+                           xmlstring += "<span class='fa fa-clock-o pull-right'></span>";
+
+                       xmlstring += "</div><div class='col-lg-4 pull-right'> " + (queuelst[irow].tempDate) + "</div><div class='col-lg-2 pull-right'> " + queuelst[irow].Price + "</div></div></a>"
+                   }
+                   $("#divQueue").html(xmlstring);
+               });
+           }
+           GetBlobData = function () {
+               $.getJSON('@Url.Action("GetBlobDetails", "Home")', null, function (result) {
+                   var blobdata = result.bloblist;
+                   xmlstring = "";
+                   for (var irow = 0; irow < blobdata.length; irow++) {
+                       var FileName = (blobdata[irow].FileName).split("_");
+                       videolist.push(blobdata[irow].Uri);
+                       if (playFlag == false) {
+                           showvideo(blobdata[0].Uri, 0);
+                       }
+                       xmlstring += "<a href='#' onclick=showvideo('" + blobdata[irow].Uri + "'," + irow + ") class='list-group-item'><i class='fa fa-video-camera' style = 'margin-right:5px;'></i>" + FileName[1].split(".")[0] + "<i class='fa fa-play-circle-o pull-right'></i></a>";
+                   }
+
+                   $("#divBlob").html(xmlstring);
+                   var video = document.getElementsByTagName('video')[0];
+
+                   video.onended = function () {
+                       videoCurrentPos++;
+                       if (videoCurrentPos > videolist.length)
+                           videoCurrentPos = 0;
+                       showvideo(videolist[videoCurrentPos], videoCurrentPos);
+                   };
+               });
+           }
+
+           $("#btnSubmit").click(function () {
+               if ($("#hdnstockid").val() == "" || $('#txtQuantity').val() == "" || $('#txtPrice').val() == "")
+               {
+                   alert('Please enter details');
+                   return false;
+               }
+                $.ajax({
+                    url: "/Home/SaveStockQeueue",
+                    dataType: "json",
+                    type: "POST",
+                    data: { "Price": $('#txtPrice').val(), "Quantity": $('#txtQuantity').val(), "StockId": $("#hdnstockid").val(), "StockName": $("#stockname").text() },
+                    success: function (data) {
+                        alert('Saved Succesfully');
+                        $('#txtQuantity').val('');
+                        $('#hdnstockid').val('');
+                        $('#txtPrice').val('');
+                        $('#stockname').text('Stock Name');
+                        $("#divPrice").text(0.0);
+                        GetStockDetails();
+                    },
+                    failure: function (errMsg) {
+                        alert(errMsg);
+                    }
+
+                });
+                //GetStockDetails();
+            });
+            GetStockDetails();
+        });
+
+       function Display(stockname, stockid, price, flag) {
+           $("#stockname").text(stockname);
+           $("#divPrice").text(price);
+           $("#hdnstockid").val(stockid);
+           if (flag) {
+               $("#color").attr('class', 'card card-dark bg-success');
+               $("#arrow").attr('class', 'fa fa-caret-up fa-2x col-sm-offset-1');
+           }
+           else {
+               $("#color").attr('class', 'card card-dark bg-danger');
+               $("#arrow").attr('class', 'fa fa-caret-down fa-2x col-sm-offset-1');
+           }
+           playFlag = true;
+       }
+       function GetStockDetails() {
+           GetTableData();
+           GetQueueData();
+           GetBlobData();
+           setTimeout(GetStockDetails, 20000);
+       }
+       function showvideo(url,position)
+       {
+           var video = document.getElementsByTagName('video')[0];
+           var sources = video.getElementsByTagName('source');
+           sources[0].src = url;
+           videoCurrentPos = position;
+           video.load();
+           playFlag = true;
+       }
+       function isNumberandDecimal(evt) {
+           evt = (evt) ? evt : window.event;
+           var charCode = (evt.which) ? evt.which : evt.keyCode;
+           if (charCode > 31 && (charCode < 48 || charCode > 57) && charCode!=46) {
+               return false;
+           }
+           return true;
+       }
+       function isNumber(evt) {
+           evt = (evt) ? evt : window.event;
+           var charCode = (evt.which) ? evt.which : evt.keyCode;
+           if (charCode > 31 && (charCode < 48 || charCode > 57)) {
+               return false;
+           }
+           return true;
+       }
+
+    </script>

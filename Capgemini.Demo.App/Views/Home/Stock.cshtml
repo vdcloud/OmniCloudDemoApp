@@ -1,0 +1,36 @@
+﻿
+
+
+<!DOCTYPE html>
+
+<html>
+<head>
+    <meta name="viewport" content="width=device-width" />
+    <title>Stock</title>
+</head>
+@using (Html.BeginForm("SaveStockDetails", "Home", FormMethod.Post, new { @class = "form-horizontal", role = "form", @name = "myform" }))
+{
+    <div> 
+       Stock Name <input type="text" id="stockname" />
+        Stock Price <input type="text" id="stockprice" />
+        Quantity <input type="text" id="quantity" />
+        <input type="button" id="btnSave" value="Save" />
+    </div>
+}
+</html>
+<script type="text/javascript">
+        $(document).ready(function () {
+            $("#btnSave").click(function () {
+                $.ajax({
+                    url: "/Home/SaveStockDetails",
+                    dataType: "json",
+                    type: "POST",
+                    data: { "StockName": $('#stockname').val(), "Price": $('#stockprice').val(), "Quantity": $('#quantity').val()},
+                    success: function (data) { alert('Saved Succesfully');  },
+                    failure: function (errMsg) {
+                        alert(errMsg);
+                    }
+                });
+            });
+        });
+</script>
